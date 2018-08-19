@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'api/Token.dart';
+import 'api/main.dart' as api;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key key}) : super(key: key);
@@ -8,17 +13,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
-  bool _isLoading = false;
+  Future<Token> _token;
 
-  void _toggleLoading() {
-    setState(() {
-      _isLoading = !_isLoading;
-    });
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final email = TextFormField(
+      controller: emailController,
       keyboardType: TextInputType.emailAddress,
       autofocus: false,
       decoration: InputDecoration(
@@ -31,6 +41,7 @@ class _LoginPage extends State<LoginPage> {
     );
 
     final password = TextFormField(
+      controller: passwordController,
       autofocus: false,
       obscureText: true,
       decoration: InputDecoration(
@@ -51,14 +62,39 @@ class _LoginPage extends State<LoginPage> {
         child: MaterialButton(
           minWidth: 200.0,
           height: 42.0,
-          onPressed: _toggleLoading,
+          onPressed: () {
+            setState(() {
+              _token = api.getToken(
+                  emailController.value.text, passwordController.value.text);
+            });
+          },
           color: Colors.teal.shade300,
           child: Text(
-            _isLoading ? 'Logging in...' : 'Log In',
+            'Log In',
             style: TextStyle(color: Colors.white),
           ),
         ),
       ),
+    );
+
+    final tokenOutput = FutureBuilder<Token>(
+      future: _token,
+      builder: (BuildContext context, AsyncSnapshot<Token> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            return SizedBox(height: 5.0);
+          case ConnectionState.waiting:
+            return LinearProgressIndicator();
+          default:
+            if (snapshot.hasError) {
+              return Text("Error: ${snapshot.error}");
+            } else {
+              final tokenText = "Token: ${snapshot.data.obscuredToken()}";
+              final dateText = "Created At ${snapshot.data.createdAt}";
+              return Text("$tokenText\n$dateText");
+            }
+        }
+      },
     );
 
     return Scaffold(
@@ -74,7 +110,7 @@ class _LoginPage extends State<LoginPage> {
             password,
             SizedBox(height: 24.0),
             loginButton,
-            _isLoading ? LinearProgressIndicator() : SizedBox(height: 5.0),
+            tokenOutput,
           ],
         ),
       ),
