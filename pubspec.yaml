@@ -2,6 +2,7 @@ name: mmw_flutter
 description: Simple front-end for Model My Watershed
 
 dependencies:
+  http: ^0.11.3+16
   flutter:
     sdk: flutter
 
