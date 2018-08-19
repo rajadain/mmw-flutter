@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key key}) : super(key: key);
+
+  @override
+  createState() => _LoginPage();
+}
+
+class _LoginPage extends State<LoginPage> {
+  bool _isLoading = false;
+
+  void _toggleLoading() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final email = TextFormField(
@@ -36,10 +51,10 @@ class LoginPage extends StatelessWidget {
         child: MaterialButton(
           minWidth: 200.0,
           height: 42.0,
-          onPressed: () {},
+          onPressed: _toggleLoading,
           color: Colors.teal.shade300,
           child: Text(
-            'Log In',
+            _isLoading ? 'Logging in...' : 'Log In',
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -59,6 +74,7 @@ class LoginPage extends StatelessWidget {
             password,
             SizedBox(height: 24.0),
             loginButton,
+            _isLoading ? LinearProgressIndicator() : SizedBox(height: 5.0),
           ],
         ),
       ),
