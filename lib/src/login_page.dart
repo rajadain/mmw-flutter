@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'api/Token.dart';
-import 'api/main.dart' as api;
+import 'api/main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key key}) : super(key: key);
@@ -13,7 +12,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
-  Future<Token> _token;
+  Future<API> _api;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -64,7 +63,7 @@ class _LoginPage extends State<LoginPage> {
           height: 42.0,
           onPressed: () {
             setState(() {
-              _token = api.getToken(
+              _api = API.fromCredentials(
                   emailController.value.text, passwordController.value.text);
             });
           },
@@ -77,9 +76,9 @@ class _LoginPage extends State<LoginPage> {
       ),
     );
 
-    final tokenOutput = FutureBuilder<Token>(
-      future: _token,
-      builder: (BuildContext context, AsyncSnapshot<Token> snapshot) {
+    final tokenOutput = FutureBuilder<API>(
+      future: _api,
+      builder: (BuildContext context, AsyncSnapshot<API> snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none:
             return SizedBox(height: 5.0);
@@ -89,8 +88,9 @@ class _LoginPage extends State<LoginPage> {
             if (snapshot.hasError) {
               return Text("Error: ${snapshot.error}");
             } else {
-              final tokenText = "Token: ${snapshot.data.obscuredToken()}";
-              final dateText = "Created At ${snapshot.data.createdAt}";
+              final token = snapshot.data.token;
+              final tokenText = "Token: ${token.obscuredToken()}";
+              final dateText = "Created At ${token.createdAt}";
               return Text("$tokenText\n$dateText");
             }
         }
