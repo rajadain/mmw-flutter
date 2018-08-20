@@ -24,3 +24,13 @@ Future<Token> getToken(String username, String password) async {
         "Error ${response.statusCode}: failed to get token for user $username.");
   }
 }
+
+class API {
+  final Token token;
+
+  API({this.token});
+
+  static Future<API> fromCredentials(String username, String password) async {
+    return API(token: await getToken(username, password));
+  }
+}
