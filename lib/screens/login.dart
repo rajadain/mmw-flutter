@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'api/main.dart';
+import '../api/main.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key key}) : super(key: key);
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key key}) : super(key: key);
 
   @override
-  createState() => _LoginPage();
+  createState() => _LoginScreen();
 }
 
-class _LoginPage extends State<LoginPage> {
+class _LoginScreen extends State<LoginScreen> {
   Future<API> _api;
 
   final emailController = TextEditingController();
