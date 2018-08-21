@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../api/main.dart';
+import 'search.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key key}) : super(key: key);
@@ -61,13 +62,25 @@ class _LoginScreen extends State<LoginScreen> {
         child: MaterialButton(
           minWidth: 200.0,
           height: 42.0,
+          color: Colors.teal.shade300,
           onPressed: () {
+            final username = emailController.value.text;
+            final password = passwordController.value.text;
+            final onLoggedIn = (API api) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchScreen(api: api),
+                ),
+              );
+
+              return api;
+            };
+
             setState(() {
-              _api = API.fromCredentials(
-                  emailController.value.text, passwordController.value.text);
+              _api = API.fromCredentials(username, password).then(onLoggedIn);
             });
           },
-          color: Colors.teal.shade300,
           child: Text(
             'Log In',
             style: TextStyle(color: Colors.white),
@@ -88,10 +101,7 @@ class _LoginScreen extends State<LoginScreen> {
             if (snapshot.hasError) {
               return Text("Error: ${snapshot.error}");
             } else {
-              final token = snapshot.data.token;
-              final tokenText = "Token: ${token.obscuredToken()}";
-              final dateText = "Created At ${token.createdAt}";
-              return Text("$tokenText\n$dateText");
+              return SizedBox(height: 5.0);
             }
         }
       },
