@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../api/Boundary.dart';
+import '../api/HUC.dart';
 import '../api/main.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -15,7 +17,7 @@ class _SearchScreen extends State<SearchScreen> {
   final _delegate = _SearchScreenSearchDelegate();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int _lastIntegerSelected;
+  Boundary _lastSelectedBoundary;
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +41,14 @@ class _SearchScreen extends State<SearchScreen> {
             tooltip: 'Search',
             icon: Icon(Icons.search),
             onPressed: () async {
-              final selected = await showSearch<int>(
+              final selected = await showSearch<Boundary>(
                 context: context,
                 delegate: _delegate,
               );
 
-              if (selected != null && selected != _lastIntegerSelected) {
+              if (selected != null && selected != _lastSelectedBoundary) {
                 setState(() {
-                  _lastIntegerSelected = selected;
+                  _lastSelectedBoundary = selected;
                 });
               }
             },
@@ -71,10 +73,23 @@ class _SearchScreen extends State<SearchScreen> {
   }
 }
 
-class _SearchScreenSearchDelegate extends SearchDelegate<int> {
-  final List<int> _history = <int>[42607, 85604, 66734, 44, 174];
-  final List<int> _data =
-      List<int>.generate(10001, (int i) => i).reversed.toList();
+class _SearchScreenSearchDelegate extends SearchDelegate<Boundary> {
+  final List<Boundary> _data = [
+    Boundary.fromArgs(1748, HUCS.huc8, 'Schuylkill', 30, -75.7706892535944,
+        40.39343175506416),
+    Boundary.fromArgs(1332, HUCS.huc10, 'Little Schuylkill River', 20,
+        -75.99387613816485, 40.75239198564602),
+    Boundary.fromArgs(1337, HUCS.huc10, 'Middle Schuylkill River', 20,
+        -75.9075037540484, 40.35849161712014),
+    Boundary.fromArgs(1333, HUCS.huc10, 'Upper Schuylkill River', 20,
+        -76.17023062164077, 40.67499361419338),
+    Boundary.fromArgs(54282, HUCS.huc12, 'Mahannon Creek-Schuylkill River', 10,
+        -76.12933918378118, 40.616369844722634),
+    Boundary.fromArgs(54842, HUCS.huc12, 'Pigeon Creek-Schuylkill River', 10,
+        -75.96750163442022, 40.51608768842672),
+    Boundary.fromArgs(55173, HUCS.huc12, 'Plymouth Creek-Schuylkill River', 10,
+        -75.2975197504376, 40.06896120105465),
+  ];
 
   @override
   Widget buildLeading(BuildContext context) {
@@ -92,15 +107,15 @@ class _SearchScreenSearchDelegate extends SearchDelegate<int> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final Iterable<int> suggestions = query.isEmpty
-        ? _history
-        : _data.where((int i) => '$i'.startsWith(query));
+    final Iterable<Boundary> suggestions = query.isEmpty
+        ? []
+        : _data.where((Boundary b) => b.name.contains(query));
 
     return _SuggestionList(
       query: query,
-      suggestions: suggestions.map((int i) => '$i').toList(),
-      onSelected: (String suggestion) {
-        query = suggestion;
+      suggestions: suggestions.toList(),
+      onSelected: (Boundary suggestion) {
+        query = suggestion.name;
         showResults(context);
       },
     );
@@ -108,12 +123,12 @@ class _SearchScreenSearchDelegate extends SearchDelegate<int> {
 
   @override
   Widget buildResults(BuildContext context) {
-    final searched = int.tryParse(query);
+    final searched = _data.firstWhere((Boundary b) => b.name.contains(query));
 
     if (searched == null || !_data.contains(searched)) {
       return Center(
         child: Text(
-          'Invalid query: $query',
+          'No results for $query',
           textAlign: TextAlign.center,
         ),
       );
@@ -122,18 +137,7 @@ class _SearchScreenSearchDelegate extends SearchDelegate<int> {
     return ListView(
       children: [
         _ResultCard(
-          title: 'this integer',
-          integer: searched,
-          searchDelegate: this,
-        ),
-        _ResultCard(
-          title: 'next integer',
-          integer: searched + 1,
-          searchDelegate: this,
-        ),
-        _ResultCard(
-          title: 'previous integer',
-          integer: searched - 1,
+          boundary: searched,
           searchDelegate: this,
         ),
       ],
@@ -164,11 +168,10 @@ class _SearchScreenSearchDelegate extends SearchDelegate<int> {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({this.integer, this.title, this.searchDelegate});
+  const _ResultCard({this.boundary, this.searchDelegate});
 
-  final int integer;
-  final String title;
-  final SearchDelegate<int> searchDelegate;
+  final Boundary boundary;
+  final SearchDelegate<Boundary> searchDelegate;
 
   @override
   Widget build(BuildContext context) {
@@ -176,18 +179,19 @@ class _ResultCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        searchDelegate.close(context, integer);
+        searchDelegate.close(context, boundary);
       },
       child: Card(
         child: Padding(
           padding: EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Text(title),
+              Text(boundary.huc.label),
               Text(
-                '$integer',
-                style: theme.textTheme.headline.copyWith(fontSize: 72.0),
+                boundary.name,
+                style: theme.textTheme.headline.copyWith(fontSize: 36.0),
               ),
+              Text('${boundary.x}, ${boundary.y}'),
             ],
           ),
         ),
@@ -199,9 +203,9 @@ class _ResultCard extends StatelessWidget {
 class _SuggestionList extends StatelessWidget {
   const _SuggestionList({this.suggestions, this.query, this.onSelected});
 
-  final List<String> suggestions;
+  final List<Boundary> suggestions;
   final String query;
-  final ValueChanged<String> onSelected;
+  final ValueChanged<Boundary> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -210,25 +214,33 @@ class _SuggestionList extends StatelessWidget {
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (BuildContext context, int i) {
-        final String suggestion = suggestions[i];
+        final String name = suggestions[i].name;
+        final int matchIndex = name.indexOf(query);
+        final String beforeMatch = name.substring(0, matchIndex);
+        final String match =
+            name.substring(matchIndex, matchIndex + query.length);
+        final String afterMatch = name.substring(matchIndex + query.length);
 
         return ListTile(
           leading: query.isEmpty ? Icon(Icons.history) : Icon(null),
           title: RichText(
             text: TextSpan(
-              text: suggestion.substring(0, query.length),
-              style:
-                  theme.textTheme.subhead.copyWith(fontWeight: FontWeight.bold),
+              text: beforeMatch,
+              style: theme.textTheme.subhead,
               children: <TextSpan>[
                 TextSpan(
-                  text: suggestion.substring(query.length),
-                  style: theme.textTheme.subhead,
+                  text: match,
+                  style: theme.textTheme.subhead
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(
+                  text: afterMatch,
                 ),
               ],
             ),
           ),
           onTap: () {
-            onSelected(suggestion);
+            onSelected(suggestions[i]);
           },
         );
       },
