@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
-import '../api/HUC.dart';
 import '../api/main.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,7 +15,9 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreen extends State<SearchScreen> {
-  final _delegate = _SearchScreenSearchDelegate();
+  final _delegate = _SearchScreenSearchDelegate(
+    api: widget.api,
+  );
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Boundary _lastSelectedBoundary;
@@ -74,22 +77,10 @@ class _SearchScreen extends State<SearchScreen> {
 }
 
 class _SearchScreenSearchDelegate extends SearchDelegate<Boundary> {
-  final List<Boundary> _data = [
-    Boundary.fromArgs(1748, HUCS.huc8, 'Schuylkill', 30, -75.7706892535944,
-        40.39343175506416),
-    Boundary.fromArgs(1332, HUCS.huc10, 'Little Schuylkill River', 20,
-        -75.99387613816485, 40.75239198564602),
-    Boundary.fromArgs(1337, HUCS.huc10, 'Middle Schuylkill River', 20,
-        -75.9075037540484, 40.35849161712014),
-    Boundary.fromArgs(1333, HUCS.huc10, 'Upper Schuylkill River', 20,
-        -76.17023062164077, 40.67499361419338),
-    Boundary.fromArgs(54282, HUCS.huc12, 'Mahannon Creek-Schuylkill River', 10,
-        -76.12933918378118, 40.616369844722634),
-    Boundary.fromArgs(54842, HUCS.huc12, 'Pigeon Creek-Schuylkill River', 10,
-        -75.96750163442022, 40.51608768842672),
-    Boundary.fromArgs(55173, HUCS.huc12, 'Plymouth Creek-Schuylkill River', 10,
-        -75.2975197504376, 40.06896120105465),
-  ];
+  final API api;
+  Future<List<Boundary>> _future;
+
+  _SearchScreenSearchDelegate({this.api});
 
   @override
   Widget buildLeading(BuildContext context) {
@@ -107,13 +98,11 @@ class _SearchScreenSearchDelegate extends SearchDelegate<Boundary> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final Iterable<Boundary> suggestions = query.isEmpty
-        ? []
-        : _data.where((Boundary b) => b.name.contains(query));
+    _future = api.getSuggestions(query);
 
-    return _SuggestionList(
+    return _FutureSuggestionList(
+      future: _future,
       query: query,
-      suggestions: suggestions.toList(),
       onSelected: (Boundary suggestion) {
         query = suggestion.name;
         showResults(context);
@@ -123,24 +112,31 @@ class _SearchScreenSearchDelegate extends SearchDelegate<Boundary> {
 
   @override
   Widget buildResults(BuildContext context) {
-    final searched = _data.firstWhere((Boundary b) => b.name.contains(query));
+//    final searched = _data.firstWhere((Boundary b) => b.name.contains(query));
+//
+//    if (searched == null || !_data.contains(searched)) {
+//      return Center(
+//        child: Text(
+//          'No results for $query',
+//          textAlign: TextAlign.center,
+//        ),
+//      );
+//    }
+//
+//    return ListView(
+//      children: [
+//        _ResultCard(
+//          boundary: searched,
+//          searchDelegate: this,
+//        ),
+//      ],
+//    );
 
-    if (searched == null || !_data.contains(searched)) {
-      return Center(
-        child: Text(
-          'No results for $query',
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    return ListView(
-      children: [
-        _ResultCard(
-          boundary: searched,
-          searchDelegate: this,
-        ),
-      ],
+    return Center(
+      child: Text(
+        'No results for $query',
+        textAlign: TextAlign.center,
+      ),
     );
   }
 
@@ -196,6 +192,37 @@ class _ResultCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FutureSuggestionList extends StatelessWidget {
+  const _FutureSuggestionList({this.future, this.query, this.onSelected});
+
+  final Future<List<Boundary>> future;
+  final String query;
+  final ValueChanged<Boundary> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Boundary>>(
+      future: future,
+      builder: (BuildContext context, AsyncSnapshot<List<Boundary>> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            return _SuggestionList(
+              suggestions: snapshot.data,
+              query: query,
+              onSelected: onSelected,
+            );
+          default:
+            return _SuggestionList(
+              suggestions: [],
+              query: query,
+              onSelected: onSelected,
+            );
+        }
+      },
     );
   }
 }
