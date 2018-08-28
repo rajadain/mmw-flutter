@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../api/Boundary.dart';
 import '../api/main.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -13,6 +16,9 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreen extends State<SearchScreen> {
   final searchController = TextEditingController();
+  String get query => searchController.text;
+
+  Future<List<Boundary>> boundaries;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +34,38 @@ class _SearchScreen extends State<SearchScreen> {
       ),
     );
 
+    final button = RaisedButton(
+      onPressed: () {
+        setState(() {
+          boundaries = widget.api.getSuggestions(query);
+        });
+      },
+      child: Text("Search"),
+    );
+
+    final results = FutureBuilder<List<Boundary>>(
+      future: boundaries,
+      builder: (BuildContext context, AsyncSnapshot<List<Boundary>> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            if (snapshot.hasError) {
+              return Text("Error: ${snapshot.error}");
+            }
+
+            return Column(
+              children: snapshot.data
+                  .map((Boundary b) => _BoundarySuggestionTile(b))
+                  .toList(),
+            );
+          case ConnectionState.active:
+          case ConnectionState.waiting:
+            return Text("Fetching Results");
+          default:
+            return SizedBox(height: 8.0);
+        }
+      },
+    );
+
     return Scaffold(
       backgroundColor: Colors.teal,
       body: ListView(
@@ -35,8 +73,25 @@ class _SearchScreen extends State<SearchScreen> {
         children: <Widget>[
           SizedBox(height: 48.0),
           search,
+          SizedBox(height: 8.0),
+          button,
+          SizedBox(height: 8.0),
+          results,
         ],
       ),
+    );
+  }
+}
+
+class _BoundarySuggestionTile extends StatelessWidget {
+  final Boundary boundary;
+
+  const _BoundarySuggestionTile(this.boundary);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(boundary.name),
     );
   }
 }
