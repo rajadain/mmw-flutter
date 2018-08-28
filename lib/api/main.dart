@@ -3,9 +3,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'Boundary.dart';
 import 'Token.dart';
 
-const MMW_URL = "https://staging.app.wikiwatershed.org/api";
+const MMW_URL = "https://staging.app.wikiwatershed.org";
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
@@ -15,7 +16,7 @@ const JSON_HEADERS = {
 Future<Token> getToken(String username, String password) async {
   final body = json.encode({'username': username, 'password': password});
   final response =
-      await http.post("$MMW_URL/token/", body: body, headers: JSON_HEADERS);
+      await http.post("$MMW_URL/api/token/", body: body, headers: JSON_HEADERS);
 
   if (response.statusCode == 200) {
     return Token.fromJson(json.decode(response.body));
@@ -32,5 +33,19 @@ class API {
 
   static Future<API> fromCredentials(String username, String password) async {
     return API(token: await getToken(username, password));
+  }
+
+  Future<List<Boundary>> getSuggestions(String query) async {
+    final response = await http.get(
+        "$MMW_URL/mmw/modeling/boundary-layers-search/?text=$query",
+        headers: JSON_HEADERS);
+    if (response.statusCode == 200) {
+      return (json.decode(response.body)['suggestions'] as List)
+          .map((b) => Boundary.fromJson(b))
+          .toList();
+    } else {
+      throw Exception(
+          "Error ${response.statusCode}: could not get suggestions for $query");
+    }
   }
 }
