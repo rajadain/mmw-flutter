@@ -54,12 +54,12 @@ class _SearchScreen extends State<SearchScreen> {
 
             return Column(
               children: snapshot.data
-                  .map((Boundary b) => _BoundarySuggestionTile(b))
+                  .map((Boundary b) => _BoundarySuggestionTile(b, query))
                   .toList(),
             );
           case ConnectionState.active:
           case ConnectionState.waiting:
-            return Text("Fetching Results");
+            return LinearProgressIndicator();
           default:
             return SizedBox(height: 8.0);
         }
@@ -68,16 +68,28 @@ class _SearchScreen extends State<SearchScreen> {
 
     return Scaffold(
       backgroundColor: Colors.teal,
-      body: ListView(
-        padding: EdgeInsets.only(left: 24.0, right: 24.0),
-        children: <Widget>[
-          SizedBox(height: 48.0),
-          search,
-          SizedBox(height: 8.0),
-          button,
-          SizedBox(height: 8.0),
-          results,
-        ],
+      appBar: AppBar(
+        title: Text("Search for HUC"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: <Widget>[
+            search,
+            SizedBox(height: 8.0),
+            Row(
+              children: <Widget>[
+                Expanded(child: button),
+              ],
+            ),
+            SizedBox(height: 8.0),
+            Expanded(
+              child: ListView(
+                children: [results],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -85,13 +97,41 @@ class _SearchScreen extends State<SearchScreen> {
 
 class _BoundarySuggestionTile extends StatelessWidget {
   final Boundary boundary;
+  final String query;
 
-  const _BoundarySuggestionTile(this.boundary);
+  const _BoundarySuggestionTile(this.boundary, this.query);
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(boundary.name),
+    final String name = boundary.name;
+    final int matchIndex = name.toLowerCase().indexOf(query.toLowerCase());
+    final String beforeMatch = name.substring(0, matchIndex);
+    final String match = name.substring(matchIndex, matchIndex + query.length);
+    final String afterMatch = name.substring(matchIndex + query.length);
+
+    return Card(
+      color: Colors.white,
+      child: ListTile(
+        title: RichText(
+          text: TextSpan(
+              text: beforeMatch,
+              style: Theme.of(context).textTheme.subhead,
+              children: [
+                TextSpan(
+                  text: match,
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .subhead
+                      .copyWith(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(
+                    text: afterMatch,
+                    style: Theme.of(context).textTheme.subhead),
+              ]),
+        ),
+        subtitle: Text(boundary.huc.label),
+      ),
     );
   }
 }
