@@ -55,7 +55,11 @@ class _SearchScreen extends State<SearchScreen> {
 
             return Column(
               children: snapshot.data
-                  .map((Boundary b) => _BoundarySuggestionTile(b, query))
+                  .map((Boundary b) => _BoundarySuggestionTile(
+                        api: widget.api,
+                        query: query,
+                        boundary: b,
+                      ))
                   .toList(),
             );
           case ConnectionState.active:
@@ -99,8 +103,14 @@ class _SearchScreen extends State<SearchScreen> {
 class _BoundarySuggestionTile extends StatelessWidget {
   final Boundary boundary;
   final String query;
+  final API api;
 
-  const _BoundarySuggestionTile(this.boundary, this.query);
+  const _BoundarySuggestionTile({
+    Key key,
+    @required this.boundary,
+    @required this.query,
+    @required this.api,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -109,34 +119,35 @@ class _BoundarySuggestionTile extends StatelessWidget {
     final String beforeMatch = name.substring(0, matchIndex);
     final String match = name.substring(matchIndex, matchIndex + query.length);
     final String afterMatch = name.substring(matchIndex + query.length);
+    final TextStyle style = Theme.of(context).textTheme.subhead;
 
     return Card(
       color: Colors.white,
       child: ListTile(
         title: RichText(
           text: TextSpan(
-              text: beforeMatch,
-              style: Theme.of(context).textTheme.subhead,
-              children: [
-                TextSpan(
-                  text: match,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .subhead
-                      .copyWith(fontWeight: FontWeight.bold),
+            text: beforeMatch,
+            style: style,
+            children: [
+              TextSpan(
+                text: match,
+                style: style.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                TextSpan(
-                    text: afterMatch,
-                    style: Theme.of(context).textTheme.subhead),
-              ]),
+              ),
+              TextSpan(
+                text: afterMatch,
+              ),
+            ],
+          ),
         ),
         subtitle: Text(boundary.huc.label),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AnalysisScreen(boundary: boundary),
+              builder: (context) =>
+                  AnalysisScreen(boundary: boundary, api: api),
             ),
           );
         },
