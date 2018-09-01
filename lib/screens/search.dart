@@ -146,8 +146,10 @@ class _BoundarySuggestionTile extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  AnalysisScreen(boundary: boundary, api: api),
+              builder: (context) => AnalysisScreen(
+                    boundary: boundary,
+                    landJob: api.postLand(boundary),
+                  ),
             ),
           );
         },

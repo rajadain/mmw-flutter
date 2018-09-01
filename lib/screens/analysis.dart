@@ -1,16 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
-import '../api/main.dart';
+import '../api/JobStatus.dart';
 
 class AnalysisScreen extends StatefulWidget {
-  final API api;
+  final Future<JobStatus> landJob;
   final Boundary boundary;
 
   const AnalysisScreen({
     Key key,
     @required this.boundary,
-    @required this.api,
+    @required this.landJob,
   }) : super(key: key);
 
   @override
@@ -45,7 +47,7 @@ class _AnalysisScreen extends State<AnalysisScreen> {
         body: TabBarView(
           children: [
             Center(
-              child: CircularProgressIndicator(),
+              child: JobWidget(job: widget.landJob),
             ),
             Center(
               child: CircularProgressIndicator(),
@@ -55,6 +57,34 @@ class _AnalysisScreen extends State<AnalysisScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class JobWidget extends StatelessWidget {
+  final Future<JobStatus> job;
+
+  const JobWidget({Key key, @required this.job}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FutureBuilder<JobStatus>(
+        future: job,
+        builder: (BuildContext context, AsyncSnapshot<JobStatus> snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              final icon =
+                  snapshot.hasError ? Icons.error_outline : Icons.check_circle;
+              return Icon(
+                icon,
+                color: Theme.of(context).primaryColor,
+              );
+            default:
+              return CircularProgressIndicator();
+          }
+        },
       ),
     );
   }
