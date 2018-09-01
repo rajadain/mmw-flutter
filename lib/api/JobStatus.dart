@@ -33,17 +33,7 @@ class JobStatus<T extends Result> {
 
     switch (status) {
       case Status.complete:
-        if (T is LandResult) {
-          // NOTE: It is very irritating that Dart doesn't let me specify
-          // a "T fromJson();" abstract static method in the Result class
-          // to be implemented by child classes, so I have to do this dumb
-          // dance of checking if T is every possible result type, then
-          // calling fromJson on it, then casting it BACK to T (which at
-          // this point we KNOW is LandResult).
-          result = LandResult.fromJson(json['result']) as T;
-        } else {
-          throw Exception('Error: unsupported result type');
-        }
+        result = parseResult(json['result']) as T;
         break;
       default:
         result = null;
