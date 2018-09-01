@@ -1,9 +1,22 @@
+import 'AnalysisTypes.dart';
+
 abstract class Result {
-  get analysisType;
+  AnalysisTypes get analysisType;
+}
+
+Result parseResult(Map<String, dynamic> json) {
+  final analysisType = parseAnalysisType(json['survey']['name']);
+
+  switch (analysisType) {
+    case AnalysisTypes.land:
+      return LandResult.fromJson(json['survey']);
+    default:
+      throw Exception("Error: Unsupported result type");
+  }
 }
 
 class LandResult extends Result {
-  get analysisType => "land";
+  get analysisType => AnalysisTypes.land;
 
   final List<LandResultCategory> categories;
 
@@ -35,9 +48,9 @@ class LandResultCategory {
 
   factory LandResultCategory.fromJson(Map<String, dynamic> json) {
     return LandResultCategory(
-      nlcd: int.parse(json['nlcd']),
-      areaSqm: double.parse(json['area']),
-      areaPercent: double.parse(json['coverage']),
+      nlcd: json['nlcd'],
+      areaSqm: json['area'],
+      areaPercent: json['coverage'],
       code: json['code'],
       label: json['type'],
     );
