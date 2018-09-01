@@ -1,3 +1,5 @@
+import 'Result.dart';
+
 enum Status { started, completed, failed }
 
 Status parseStatus(String status) {
@@ -8,13 +10,13 @@ Status parseStatus(String status) {
   );
 }
 
-class JobStatus {
+class JobStatus<T extends Result> {
   final String error;
   final String uuid;
   final Status status;
   final DateTime startedAt;
   final DateTime finishedAt;
-  final dynamic result;
+  final T result;
 
   JobStatus({
     this.uuid,
@@ -26,13 +28,34 @@ class JobStatus {
   });
 
   factory JobStatus.fromJson(Map<String, dynamic> json) {
+    final Status status = parseStatus(json['status']);
+    T result;
+
+    switch (status) {
+      case Status.completed:
+        if (T is LandResult) {
+          // NOTE: It is very irritating that Dart doesn't let me specify
+          // a "T fromJson();" abstract static method in the Result class
+          // to be implemented by child classes, so I have to do this dumb
+          // dance of checking if T is every possible result type, then
+          // calling fromJson on it, then casting it BACK to T (which at
+          // this point we KNOW is LandResult).
+          result = LandResult.fromJson(json['result']) as T;
+        } else {
+          throw Exception('Error: unsupported result type');
+        }
+        break;
+      default:
+        result = null;
+    }
+
     return JobStatus(
       uuid: json['job_uuid'],
-      status: parseStatus(json['status']),
+      status: status,
       startedAt: DateTime.parse(json['started']),
       finishedAt: DateTime.parse(json['finished']),
       error: json['error'],
-      result: json['result'],
+      result: result,
     );
   }
 }

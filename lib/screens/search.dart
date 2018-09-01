@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
+import '../api/Result.dart';
 import '../api/main.dart';
 import 'analysis.dart';
 
@@ -148,7 +149,10 @@ class _BoundarySuggestionTile extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => AnalysisScreen(
                     boundary: boundary,
-                    landJob: api.postLand(boundary),
+                    // NOTE: It is very irritating that Dart does not provide
+                    // a mechanism to get "land" out of the LandResult type,
+                    // so I have to specify the same information TWICE >:(
+                    landJob: api.postAnalysis<LandResult>("land", boundary),
                   ),
             ),
           );

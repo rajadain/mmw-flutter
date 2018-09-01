@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'Boundary.dart';
 import 'JobStatus.dart';
+import 'Result.dart';
 import 'Token.dart';
 
 const MMW_URL = "https://staging.app.wikiwatershed.org";
@@ -56,23 +57,24 @@ class API {
     }
   }
 
-  Future<JobStatus> postLand(Boundary boundary) async {
+  Future<JobStatus<T>> postAnalysis<T extends Result>(
+      String analysisType, Boundary boundary) async {
     final response = await http.post(
-      "$MMW_URL/api/analyze/land/?wkaoi=${boundary.huc.code}__${boundary.id}",
+      "$MMW_URL/api/analyze/$analysisType/?wkaoi=${boundary.huc.code}__${boundary.id}",
       headers: headers,
     );
 
     if (response.statusCode == 200) {
       final jobId = json.decode(response.body)['job'];
 
-      return poll(jobId);
+      return poll<T>(jobId);
     } else {
       throw Exception(
           "Error ${response.statusCode}: could not start land analysis for ${boundary.name}");
     }
   }
 
-  Future<JobStatus> poll(String jobId) async {
+  Future<JobStatus<T>> poll<T extends Result>(String jobId) async {
     final response = await http.get(
       "$MMW_URL/api/jobs/$jobId/",
       headers: headers,

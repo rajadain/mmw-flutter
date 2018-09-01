@@ -75,10 +75,23 @@ class JobWidget extends StatelessWidget {
         builder: (BuildContext context, AsyncSnapshot<JobStatus> snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              final icon =
-                  snapshot.hasError ? Icons.error_outline : Icons.check_circle;
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: <Widget>[
+                      Icon(
+                        Icons.error,
+                        color: Colors.redAccent,
+                      ),
+                      Text(snapshot.error.toString()),
+                    ],
+                  ),
+                );
+              }
+
               return Icon(
-                icon,
+                Icons.check_circle,
                 color: Theme.of(context).primaryColor,
               );
             default:
