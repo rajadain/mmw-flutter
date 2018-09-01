@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -67,21 +68,32 @@ class API {
     if (response.statusCode == 200) {
       final jobId = json.decode(response.body)['job'];
 
-      return poll<T>(jobId);
+      return poll<T>(jobId, Duration(seconds: 2), 5);
     } else {
       throw Exception(
           "Error ${response.statusCode}: could not start land analysis for ${boundary.name}");
     }
   }
 
-  Future<JobStatus<T>> poll<T extends Result>(String jobId) async {
+  Future<JobStatus<T>> poll<T extends Result>(
+      String jobId, Duration interval, int maxTries) async {
+    if (maxTries <= 0) {
+      throw Exception("Error: Job $jobId timed out.");
+    }
+
     final response = await http.get(
       "$MMW_URL/api/jobs/$jobId/",
       headers: headers,
     );
 
     if (response.statusCode == 200) {
-      return JobStatus.fromJson(json.decode(response.body));
+      final job = JobStatus<T>.fromJson(json.decode(response.body));
+      if (job.status == Status.complete) {
+        return job;
+      } else {
+        sleep(interval);
+        return poll<T>(jobId, interval, maxTries - 1);
+      }
     } else {
       throw Exception(
           "Error ${response.statusCode}: could not poll for $jobId");
