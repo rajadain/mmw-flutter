@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
 import '../api/main.dart';
+import 'analysis.dart';
 
 class SearchScreen extends StatefulWidget {
   final API api;
@@ -131,6 +132,14 @@ class _BoundarySuggestionTile extends StatelessWidget {
               ]),
         ),
         subtitle: Text(boundary.huc.label),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AnalysisScreen(boundary: boundary),
+            ),
+          );
+        },
       ),
     );
   }
