@@ -1,6 +1,6 @@
 import 'Result.dart';
 
-enum Status { started, completed, failed }
+enum Status { started, complete, failed }
 
 Status parseStatus(String status) {
   var test = "Status.$status";
@@ -32,7 +32,7 @@ class JobStatus<T extends Result> {
     T result;
 
     switch (status) {
-      case Status.completed:
+      case Status.complete:
         if (T is LandResult) {
           // NOTE: It is very irritating that Dart doesn't let me specify
           // a "T fromJson();" abstract static method in the Result class
