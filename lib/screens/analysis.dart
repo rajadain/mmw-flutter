@@ -91,7 +91,7 @@ class JobWidget extends StatelessWidget {
                 );
               }
 
-              return RadialChart.withSampleData();
+              return RadialChart.fromLandResult(snapshot.data.result);
             default:
               return CircularProgressIndicator();
           }
