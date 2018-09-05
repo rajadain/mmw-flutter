@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
 import '../api/JobStatus.dart';
+import '../components/RadialChart.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final Future<JobStatus> landJob;
@@ -90,10 +91,7 @@ class JobWidget extends StatelessWidget {
                 );
               }
 
-              return Icon(
-                Icons.check_circle,
-                color: Theme.of(context).primaryColor,
-              );
+              return RadialChart.fromLandResult(snapshot.data.result);
             default:
               return CircularProgressIndicator();
           }

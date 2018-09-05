@@ -55,4 +55,14 @@ class LandResultCategory {
       label: json['type'],
     );
   }
+
+  static int compare(LandResultCategory a, LandResultCategory b) {
+    if (a.areaSqm == b.areaSqm) {
+      return 0;
+    } else if (a.areaSqm < b.areaSqm) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
 }
