@@ -53,39 +53,31 @@ class _LoginScreen extends State<LoginScreen> {
       ),
     );
 
-    final loginButton = Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: Material(
-        borderRadius: BorderRadius.circular(4.0),
-        shadowColor: Colors.teal.shade500,
-        elevation: 5.0,
-        child: MaterialButton(
-          minWidth: 200.0,
-          height: 42.0,
-          color: Colors.teal.shade300,
-          onPressed: () {
-            final username = emailController.value.text;
-            final password = passwordController.value.text;
-            final onLoggedIn = (API api) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchScreen(api: api),
-                ),
-              );
+    final loginButton = MaterialButton(
+      minWidth: 200.0,
+      height: 42.0,
+      color: Colors.teal.shade300,
+      onPressed: () {
+        final username = emailController.value.text;
+        final password = passwordController.value.text;
+        final onLoggedIn = (API api) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchScreen(api: api),
+            ),
+          );
 
-              return api;
-            };
+          return api;
+        };
 
-            setState(() {
-              _api = API.fromCredentials(username, password).then(onLoggedIn);
-            });
-          },
-          child: Text(
-            'Log In',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
+        setState(() {
+          _api = API.fromCredentials(username, password).then(onLoggedIn);
+        });
+      },
+      child: Text(
+        'Log In',
+        style: TextStyle(color: Colors.white),
       ),
     );
 
