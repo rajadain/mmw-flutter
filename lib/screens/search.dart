@@ -153,6 +153,7 @@ class _BoundarySuggestionTile extends StatelessWidget {
                     // a mechanism to get "land" out of the LandResult type,
                     // so I have to specify the same information TWICE >:(
                     landJob: api.postAnalysis<LandResult>("land", boundary),
+                    soilJob: api.postAnalysis<SoilResult>("soil", boundary),
                   ),
             ),
           );

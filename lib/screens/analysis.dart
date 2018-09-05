@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 
 import '../api/Boundary.dart';
 import '../api/JobStatus.dart';
+import '../api/Result.dart';
 import '../components/RadialChart.dart';
 
 class AnalysisScreen extends StatefulWidget {
   final Future<JobStatus> landJob;
+  final Future<JobStatus> soilJob;
   final Boundary boundary;
 
   const AnalysisScreen({
     Key key,
     @required this.boundary,
     @required this.landJob,
+    @required this.soilJob,
   }) : super(key: key);
 
   @override
@@ -51,7 +54,7 @@ class _AnalysisScreen extends State<AnalysisScreen> {
               child: JobWidget(job: widget.landJob),
             ),
             Center(
-              child: CircularProgressIndicator(),
+              child: JobWidget(job: widget.soilJob),
             ),
             Center(
               child: CircularProgressIndicator(),
@@ -91,7 +94,13 @@ class JobWidget extends StatelessWidget {
                 );
               }
 
-              return RadialChart.fromLandResult(snapshot.data.result);
+              if (snapshot.data.result is LandResult) {
+                return RadialChart.fromLandResult(snapshot.data.result);
+              } else if (snapshot.data.result is SoilResult) {
+                return RadialChart.fromSoilResult(snapshot.data.result);
+              }
+
+              throw Exception("Unsupported Result Type");
             default:
               return CircularProgressIndicator();
           }

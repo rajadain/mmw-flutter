@@ -22,6 +22,16 @@ const Map<int, Color> COLOR_NLCD = {
   95: Color(0xFF64B3D5),
 };
 
+const Map<String, Color> COLOR_SOIL = {
+  'a': Color(0xFFffffd4),
+  'b': Color(0xFFfee391),
+  'c': Color(0xFFfec44f),
+  'd': Color(0xFF8c2d04),
+  'ad': Color(0xFFfe9929),
+  'bd': Color(0xFFec7014),
+  'cd': Color(0xFFcc4c02),
+};
+
 class RadialChart extends StatelessWidget {
   final List<CircularStackEntry> data;
 
@@ -45,7 +55,7 @@ class RadialChart extends StatelessWidget {
 
   factory RadialChart.fromLandResult(LandResult result) {
     final categories = result.categories;
-    categories.sort(LandResultCategory.compare);
+    categories.sort(SoilResultCategory.compare);
 
     return RadialChart(
       [
@@ -55,6 +65,26 @@ class RadialChart extends StatelessWidget {
                     lrc.areaSqm,
                     COLOR_NLCD[lrc.nlcd],
                     rankKey: lrc.code,
+                  ))
+              .toList(),
+          rankKey: 'Land Use Distribution',
+        ),
+      ],
+    );
+  }
+
+  factory RadialChart.fromSoilResult(SoilResult result) {
+    final categories = result.categories;
+    categories.sort(SoilResultCategory.compare);
+
+    return RadialChart(
+      [
+        CircularStackEntry(
+          categories
+              .map((SoilResultCategory src) => CircularSegmentEntry(
+                    src.areaSqm,
+                    COLOR_SOIL[src.code],
+                    rankKey: src.code,
                   ))
               .toList(),
           rankKey: 'Land Use Distribution',
